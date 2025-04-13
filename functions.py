@@ -98,17 +98,17 @@ class node:
         negative_scoring_phrases = {"school", "apprenticeship", "indigenous"}
         # usually indigenous programs are offered sepperately
         # bias against high school and apprenticeship programs, only want grad programs
-        high_scoring_phrases = {"grad", "graduate", "program", "stream", "pathway"}
+        high_scoring_phrases = {"grad", "graduate", "stream", "pathway"}
 
         # key[score] -> value[phrases] # TODO fix this, poor implemntation
         indepth_score_dict = {
             -100: ["high", "school", "leaver",
                    "internship", "year 12", 'aps1', 'aps2'
-                   "iii",
+                   "iii", "cert", "certified", 'qualification',
                    "news", 'media', 'release'],
-            -30: ["aps6", 'heritage'],
+            -30: ["aps6", 'heritage', 'aborginal', 'torres'],
             -20: [
-                    "covid", "report", "languages"
+                    "covid", "report", "languages", "aps5"
             ],
             -10: ["diversity", "indigenous"],
             11: ["stage"],
@@ -116,12 +116,14 @@ class node:
                  'development', 'opportunities'
                  'career', 'rotations'],
             10: ["apply", "now", "closed",
-                 "open"],
+                 "open", "data"],
+            40: ["policy", "corporate", "tech", "intel",
+                 "degree", "bachelors", "honors"],
             40: ["maths", "mathematics", "information", "engineering",
                  "degree", "bachelors", "honors"],
             50: ["graduate", "stream", "data",
                  "resource", "corporate", "technology", "legal",
-                 "12", "aps3", "aps4", 'final']
+                 "12", "aps3", "aps4", 'final', 'tertiary']
         }
 
         # like 3d n x hn tensor bruh, bad idea
@@ -133,7 +135,7 @@ class node:
                 for word in high_scoring_phrases:
                     try:
                         if word in hn.string.lower():
-                            hn_score += 20 * (6-n)  # size of the heading determines the size of the score
+                            hn_score += 5 * (6-n)  # size of the heading determines the size of the score
                     except Exception as e:
                         pass
         title_score: int = 0
@@ -145,10 +147,9 @@ class node:
 
             for w in negative_scoring_phrases:
                 if w in title_text:
-                    title_score = 100
+                    title_score = -150
         except Exception as e:
             pass
-
 
         # title
         all_text = (' '.join(self.content.get_text().split())).lower()
@@ -166,16 +167,17 @@ class node:
         elif wc < 3000:
             length_score = 50
         else:
-            length_score = -0.5 * wc + 75
+            length_score = -0.25 * wc + 150
 
         for score, phrases in indepth_score_dict.items():
             for phrase in phrases:
                 if phrase in all_text:
                     word_score += score
 
-        
-
-        return hn_score + word_score + title_score + length_score
+        weights = np.array([3, 1, 2, 0.001])
+        vector = np.array([hn_score, word_score, title_score, length_score])
+        self.vector = vector
+        return np.inner(weights, vector)
 
     def heuristic(self):
         # defines the heuristic value for a url. Based of parent url, and keyphrases in url
@@ -188,7 +190,8 @@ class node:
             -10: ["data", "legal", "entry", "level", "join", "stream"],
             10: ["about", 'questions'],
             20: ['news', 'events', 'contact', "other", "diversity", "languages"],
-            40: ["privacy", "policy"]
+            40: ["privacy", "policy"],
+            1000: ["apprenticeship", "login", "sign"]
         }
 
         if not self.parent:
@@ -228,42 +231,3 @@ class node:
             # init times are always unique
         return self.f < other.f
         # return id(self) < id(other)
-
-
-if __name__ == '__main__':
-    asa = node(url='https://www.asa.gov.au/jobs-careers/nuclear-graduate-program/pathways')
-    print(asa.goal(), asa)
-    ato = node(url='https://content.apsjobs.gov.au/career-pathways')
-    chs = ato.expand_children()
-    for ch in chs[:80]:
-        print(ch.goal(), ch)
-    print("====================================")
-    ato = node(url='https://www.ato.gov.au/careers')
-    chs = ato.expand_children()
-    for ch in chs[:80]:
-        print(ch.goal(), ch)
-    print("====================================")
-
-    urls = [
-        'https://www.psc.nsw.gov.au/workforce-management/recruitment/nsw-government-graduate-program',
-        'https://www.dss.gov.au/graduate-program?gclsrc=aw.ds&gad_source=1&gbraid=0AAAAACdBH3fzCd4si5zMCkLbBKjV0cAEp&gclid=Cj0KCQjwnui_BhDlARIsAEo9GuvPj1kwF__6RNJ2zNbDHfmMl3EQT37adyf9R7ricDe_cCYmo_Ew_DcaAgPmEALw_wcB',
-        'https://www.apsc.gov.au/about-us/working-commission/apsc-graduate-opportunities/graduate-program',
-        'https://www.oni.gov.au/careers/recruitment-journey/entry-pathways',
-        'https://www.infrastructure.gov.au/careers/2026-graduate-development-program?gclsrc=aw.ds&gad_source=1&gbraid=0AAAAAod3rf5kADfMNi-yx3bW86niCh1fw&gclid=Cj0KCQjwnui_BhDlARIsAEo9Guu5abXNYnoyyfovdyKiOanC_E1twqFNW68D1uOnAlXnMvaSZtd_lvgaAphfEALw_wcB',
-        'https://www.asis.gov.au/Careers/Current-Vacancies/Graduate-Program/',
-        'https://www.asa.gov.au/jobs-careers/nuclear-graduate-program',
-        'https://www.ato.gov.au/careers/graduate-and-entry-level-programs/ato-graduate-program',
-        'https://www.defence.gov.au/',
-        'https://www.defence.gov.au/news-events',
-        'https://www.ato.gov.au/businesses-and-organisations<D-',
-        'https://www.asa.gov.au/',
-        'https://www.ato.gov.au/careers',
-        'https://www.defence.gov.au/jobs-careers',
-        'https://www.defence.gov.au/jobs-careers/graduate-program'
-    ]
-
-    nodes = [node(url=u) for u in urls]
-
-    for n in nodes:
-        n.request()  # Load the page content
-        print(n.goal(), n)
