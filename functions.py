@@ -4,6 +4,7 @@ import time
 import typing
 from bs4 import BeautifulSoup
 import urllib
+import numpy as np
 
 
 # many nodes make a graph
@@ -108,8 +109,6 @@ class node:
             -30: ["aps6", 'heritage'],
             -20: [
                     "covid", "report", "languages"
-
-
             ],
             -10: ["diversity", "indigenous"],
             11: ["stage"],
@@ -142,11 +141,11 @@ class node:
             title_text = self.content.find('title').string
             for w in high_scoring_phrases:
                 if w in title_text:
-                    title_score += 100
+                    title_score = 100
 
             for w in negative_scoring_phrases:
                 if w in title_text:
-                    title_score -= 100
+                    title_score = 100
         except Exception as e:
             pass
 
@@ -154,26 +153,29 @@ class node:
         # title
         all_text = (' '.join(self.content.get_text().split())).lower()
         wc = len(all_text.split(' '))
-
+        word_score = 0
+        length_score = 0
         if wc < 400:
-            word_score = -100
+            length_score = -100
         elif wc < 750:
-            word_score = 54
+            length_score = 54
         elif wc < 1500:
-            word_score = 150
+            length_score = 150
         elif wc < 2500:
-            word_score = 100
+            length_score = 100
         elif wc < 3000:
-            word_score = 50
+            length_score = 50
         else:
-            word_score = -0.5 * wc + 75
+            length_score = -0.5 * wc + 75
 
         for score, phrases in indepth_score_dict.items():
             for phrase in phrases:
                 if phrase in all_text:
                     word_score += score
 
-        return hn_score + word_score
+        
+
+        return hn_score + word_score + title_score + length_score
 
     def heuristic(self):
         # defines the heuristic value for a url. Based of parent url, and keyphrases in url
@@ -229,9 +231,15 @@ class node:
 
 
 if __name__ == '__main__':
+    asa = node(url='https://www.asa.gov.au/jobs-careers/nuclear-graduate-program/pathways')
+    print(asa.goal(), asa)
     ato = node(url='https://content.apsjobs.gov.au/career-pathways')
     chs = ato.expand_children()
-    print(chs)
+    for ch in chs[:80]:
+        print(ch.goal(), ch)
+    print("====================================")
+    ato = node(url='https://www.ato.gov.au/careers')
+    chs = ato.expand_children()
     for ch in chs[:80]:
         print(ch.goal(), ch)
     print("====================================")
