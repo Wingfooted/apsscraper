@@ -40,13 +40,14 @@ def astar(start: str, avoid: List = [], WAIT_TIME=1):
 
             heapq.heappush(fringe, child)
 
+        expanded.append(current)
         count += 1
 
     return bn_order
 
 
 if __name__ == '__main__':
-    gporder = astar('https://www.westpac.com.au/')
+    gporder = astar('https://www.infrastructure.gov.au/')
     print("--------------------------------")
     for p in gporder:
         print(p.url, p.goal())
