@@ -1,7 +1,7 @@
 import pandas
 import os
 import astar
-
+import sys
 
 def get_grad_program(url):
     # url -> url, most likely grad program, score, scope
@@ -27,21 +27,21 @@ def get_grad_program(url):
     return (url, scope, grad_program_url, score)
 
 if __name__ == '__main__':
-    filename = input('File Containing Websites: ')
-    blacklist = input('File Containing Blacklisted Urls: ')
-    output = input('File for  Output: ')
+    filename = sys.argv[1]
+    blacklist = sys.argv[2]
+    output = sys.argv[3]
     with open(filename, 'r') as inputs:
-        urls = set([
-            url.replace('\n', '')
-            for url in
-            inputs.readlines()
-        ])
-    with open(blacklist, 'r') as banned:
-        banned_urls = set([
-            url.replace('\n', '')
-            for url in
-            banned.readlines()
-        ])
+       urls = set([
+           url.replace('\n', '')
+           for url in
+           inputs.readlines()
+           ])
+       with open(blacklist, 'r') as banned:
+           banned_urls = set([
+               url.replace('\n', '')
+               for url in
+               banned.readlines()
+               ])
 
     urls = urls - banned_urls
     print("=== running program ===")
@@ -57,5 +57,5 @@ if __name__ == '__main__':
             print(" ## Found:", grad_program_url, "Score:",score)
             print("key, generally values over 600 are grad programs")
             log.write(
-                f"{url},{scope},{grad_program_url},{score}\n"
-            )
+                    f"{url},{current_scope},{grad_program_url},{score}\n"
+                    )
