@@ -47,8 +47,7 @@ def astar(start: str, avoid: List = [], WAIT_TIME=1):
 
 
 if __name__ == '__main__':
-    gporder = astar('https://www.infrastructure.gov.au/')
+    gporder = astar('https://www.asis.gov.au/')
     print("--------------------------------")
     for p in gporder:
         print(p.url, p.goal())
-

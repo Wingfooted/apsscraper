@@ -46,7 +46,7 @@ def get_governemnt_agencies():
 def process_agencies(filename):
     with open(filename, 'r') as ag:
         links = [
-            f"https://{urllib.parse.urlparse(l.replace("\n", "")).netloc}\n"
+            f"https://www.{urllib.parse.urlparse(l.replace("\n", "")).netloc.replace('www.', '')}\n"
             for l in ag.readlines()]
         links = set(links)
 
